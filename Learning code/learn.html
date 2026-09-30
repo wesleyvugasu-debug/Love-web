@@ -1,0 +1,1783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anne's YES Game!</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    } 
+
+    body, html {
+      height: 100%;
+      width: 100%;
+      font-family: 'Fredoka', sans-serif;
+      overflow: hidden;
+    }
+
+    .main-container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      background-color: #ffeff5;
+      background-image: 
+        radial-gradient(at 10% 10%, rgba(255, 182, 193, 0.7) 0px, transparent 50%),
+        radial-gradient(at 90% 10%, rgba(255, 192, 203, 0.6) 0px, transparent 50%),
+        radial-gradient(at 50% 90%, rgba(255, 105, 180, 0.4) 0px, transparent 50%),
+        radial-gradient(at 20% 80%, rgba(255, 192, 203, 0.5) 0px, transparent 50%);
+    }
+
+    .hearts-backdrop {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .floating-heart {
+      position: absolute;
+      color: rgba(255, 105, 180, 0.5);
+      font-size: 24px;
+      animation: floatUp 8s infinite ease-in;
+      opacity: 0;
+    }
+
+    @keyframes floatUp {
+      0% {
+        transform: translateY(10vh) scale(0) rotate(0deg);
+        opacity: 0;
+      }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% {
+        transform: translateY(-110vh) scale(1.5) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    .floating-heart:nth-child(1) { left: 10%; animation-duration: 6s; animation-delay: 0s; font-size: 15px;}
+    .floating-heart:nth-child(2) { left: 25%; animation-duration: 8s; animation-delay: 2s; font-size: 30px;}
+    .floating-heart:nth-child(3) { left: 40%; animation-duration: 7s; animation-delay: 4s; }
+    .floating-heart:nth-child(4) { left: 60%; animation-duration: 9s; animation-delay: 1s; font-size: 20px;}
+    .floating-heart:nth-child(5) { left: 75%; animation-duration: 6s; animation-delay: 3s; font-size: 35px;}
+    .floating-heart:nth-child(6) { left: 90%; animation-duration: 8s; animation-delay: 5s; }
+
+    .page {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      z-index: 10;
+      width: 100%;
+      max-width: 650px;
+      padding: 20px;
+      position: relative;
+    }
+
+    .page.active {
+      display: flex;
+    }
+
+    .btn-back {
+      position: absolute;
+      top: -50px;
+      left: 20px;
+      background: #ffffff;
+      color: #ff3377;
+      border: 3px solid #ff3377;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0px 4px 0px #ff3377;
+      transition: all 0.2s ease;
+      outline: none;
+      z-index: 50;
+    }
+
+    .btn-back:hover {
+      transform: translateY(-2px);
+      box-shadow: 0px 6px 0px #ff3377;
+    }
+
+    .btn-back:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none !important;
+    }
+
+    .title-3d {
+      font-size: 90px;
+      font-weight: 700;
+      text-transform: uppercase;
+      line-height: 0.9;
+      color: #ff3377;
+      text-shadow: 
+        0px 0px 0px #fff, 
+        0px 2px 0px #fff, 0px -2px 0px #fff, 2px 0px 0px #fff, -2px 0px 0px #fff,
+        2px 2px 0px #fff, -2px -2px 0px #fff, 2px -2px 0px #fff, -2px 2px 0px #fff,
+        0px 4px 0px #ff0055,
+        0px 6px 0px #e6004c,
+        0px 8px 0px #cc0044,
+        0px 10px 0px #b3003b,
+        0px 15px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .subtitle {
+      font-size: 32px;
+      font-weight: 600;
+      color: #ff4d88;
+      margin-top: -10px;
+      display: block;
+      text-shadow: 
+        2px 2px 0px #fff,
+        4px 4px 0px #ff0055,
+        5px 5px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .play-button {
+      background: linear-gradient(180deg, #ff6699 0%, #ff1a66 100%);
+      border: 6px solid #ffffff;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      outline: none;
+      box-shadow: 
+        0px 10px 0px #cc0044,
+        0px 15px 30px rgba(255, 26, 102, 0.5);
+      transition: all 0.2s ease;
+      animation: buttonThrob 2s infinite ease-in-out;
+      margin-top: 30px;
+    }
+
+    .chevron-icon {
+      font-size: 55px;
+      color: #ffffff;
+      font-weight: 700;
+      transform: translateX(4px);
+    }
+
+    .play-button:hover {
+      transform: scale(1.05) translateY(-5px) rotate(5deg);
+      background: linear-gradient(180deg, #ff80aa 0%, #ff3377 100%);
+      box-shadow: 
+        0px 15px 0px #cc0044,
+        0px 20px 40px rgba(255, 26, 102, 0.6);
+      animation: none;
+    }
+
+    .click-text {
+      font-size: 18px;
+      color: #ff3377;
+      margin-top: 15px;
+      opacity: 0.8;
+    }
+
+    .question-title {
+      font-size: 38px;
+      font-weight: 700;
+      color: #ff3377;
+      text-shadow: 
+        2px 2px 0px #fff,
+        -2px -2px 0px #fff,
+        2px -2px 0px #fff,
+        -2px 2px 0px #fff,
+        0px 5px 0px #cc0044,
+        0px 10px 15px rgba(0, 0, 0, 0.15);
+      margin-bottom: 25px;
+      line-height: 1.2;
+      transition: transform 0.2s ease;
+      border-radius: 20px;
+      padding: 10px;
+    }
+
+    .options-container {
+      display: flex;
+      gap: 30px;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+    }
+
+    .options-vertical {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 100%;
+      align-items: center;
+    }
+
+    .btn-option {
+      padding: 15px 45px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: #ffffff;
+      border: 4px solid #ffffff;
+      border-radius: 50px;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-vertical {
+      width: 100%;
+      max-width: 480px;
+      padding: 16px 25px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #ffffff;
+      border: 4px solid #ffffff;
+      border-radius: 25px;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s ease;
+      background: linear-gradient(180deg, #ff6699 0%, #ff1a66 100%);
+      box-shadow: 
+        0px 6px 0px #cc0044,
+        0px 10px 20px rgba(255, 26, 102, 0.3);
+      text-align: left;
+    }
+
+    .btn-vertical:hover {
+      transform: scale(1.03) translateY(-3px);
+      box-shadow: 
+        0px 10px 0px #cc0044,
+        0px 15px 25px rgba(255, 26, 102, 0.4);
+    }
+
+    .btn-yes {
+      background: linear-gradient(180deg, #ff6699 0%, #ff1a66 100%);
+      box-shadow: 
+        0px 8px 0px #cc0044,
+        0px 10px 20px rgba(255, 26, 102, 0.4);
+    }
+
+    .btn-yes:hover {
+      transform: scale(1.08) translateY(-3px);
+      box-shadow: 
+        0px 12px 0px #cc0044,
+        0px 15px 25px rgba(255, 26, 102, 0.5);
+    }
+
+    .btn-no {
+      background: linear-gradient(180deg, #ff99bb 0%, #ff6699 100%);
+      box-shadow: 
+        0px 8px 0px #b33962,
+        0px 10px 20px rgba(255, 102, 153, 0.4);
+    }
+
+    /* FLOWER CONTAINER AROUND PICTURE */
+    .me-photo-wrapper {
+      position: relative;
+      display: inline-block;
+      margin-top: 15px;
+      padding: 25px;
+    }
+
+    .me-photo-wrapper::before {
+      content: '🌸 🌺 🌻 🌹 🌷 🌸 🌺 🌻';
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 26px;
+      white-space: nowrap;
+      animation: flowerFloat 3s ease-in-out infinite alternate;
+    }
+
+    .me-photo-wrapper::after {
+      content: '🌷 🌺 🌸 🌹 🌻 🌷 🌺 🌸';
+      position: absolute;
+      bottom: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 26px;
+      white-space: nowrap;
+      animation: flowerFloat 3s ease-in-out infinite alternate-reverse;
+    }
+
+    @keyframes flowerFloat {
+      0% { transform: translateX(-50%) translateY(0); }
+      100% { transform: translateX(-50%) translateY(-6px); }
+    }
+
+    .me-photo {
+      width: 220px;
+      height: 220px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 6px solid #ff3377;
+      box-shadow: 0 10px 25px rgba(255, 51, 119, 0.4);
+    }
+
+    /* ENVELOPE & LETTER SYSTEM */
+    .surprise-wrapper {
+      position: relative;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 10px;
+      perspective: 1000px;
+    }
+
+    .envelope-container {
+      position: relative;
+      width: 260px;
+      height: 170px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 12px 25px rgba(255, 51, 119, 0.25);
+      border: 3px solid #ffd1dc;
+      cursor: pointer;
+      transform-style: preserve-3d;
+      transition: transform 0.4s ease, opacity 2s ease;
+      animation: envelopeThrob 2s infinite ease-in-out;
+    }
+
+    .envelope-container.vanish {
+      transform: scale(0) rotate(15deg) !important;
+      opacity: 0 !important;
+    }
+
+    @keyframes envelopeThrob {
+      0% { transform: scale(1) translateY(0); }
+      50% { transform: scale(1.05) translateY(-8px); }
+      100% { transform: scale(1) translateY(0); }
+    }
+
+    .envelope-flap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-left: 130px solid transparent;
+      border-right: 130px solid transparent;
+      border-top: 95px solid #fff0f5;
+      transform-origin: top;
+      transition: transform 0.5s ease 0.4s;
+      z-index: 5;
+    }
+
+    .envelope-flap-open {
+      transform: rotateX(180deg);
+      z-index: 1;
+    }
+
+    .envelope-pocket {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #ffffff 0%, #ffe6ee 100%);
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+      border-radius: 12px;
+      z-index: 3;
+    }
+
+    .envelope-pocket-front {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100px;
+      background: #ffffff;
+      border-top: 2px solid #ffccd5;
+      clip-path: polygon(0 100%, 50% 30%, 100% 100%);
+      border-radius: 0 0 12px 12px;
+      z-index: 4;
+    }
+
+    .ribbon-wrapper {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 6;
+      transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.5s ease;
+    }
+
+    .ribbon-vertical {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 26px;
+      height: 100%;
+      background: #ff3377;
+    }
+
+    .ribbon-horizontal {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 100%;
+      height: 26px;
+      background: #ff3377;
+    }
+
+    .ribbon-bow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 42px;
+      line-height: 1;
+    }
+
+    .ribbon-fly-off {
+      transform: translate(180px, -200px) rotate(45deg) scale(1.3);
+      opacity: 0;
+    }
+
+    .reveal-instruction {
+      margin-top: 18px;
+      font-size: 20px;
+      color: #ff3377;
+      font-weight: 700;
+      animation: pulseText 1.5s infinite alternate;
+      cursor: pointer;
+    }
+
+    @keyframes pulseText {
+      0% { opacity: 0.7; transform: scale(0.98); }
+      100% { opacity: 1; transform: scale(1.02); }
+    }
+
+    .letter-paper {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      width: 230px;
+      background: #fffdfa;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      border: 2px solid #ffccd5;
+      z-index: 2;
+      opacity: 0;
+      transform-origin: center center;
+      transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      cursor: pointer;
+    }
+
+    .letter-paper.unfold-zoom {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 90vw;
+      max-width: 440px;
+      transform: translate(-50%, -50%) scale(1) rotate(0deg) !important;
+      opacity: 1 !important;
+      z-index: 100 !important;
+      box-shadow: 0 20px 50px rgba(255, 51, 119, 0.4);
+    }
+
+    .letter-paper.folded-inside {
+      transform: translateY(10px) scaleX(0.9) scaleY(0.4);
+      opacity: 0.5;
+    }
+
+    .letter-content {
+      font-family: 'Dancing Script', cursive;
+      font-size: 21px;
+      color: #333333;
+      line-height: 1.5;
+      text-align: left;
+    }
+
+    .letter-signature {
+      margin-top: 15px;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+      color: #ff3377;
+      text-align: right;
+    }
+
+    .close-hint {
+      display: block;
+      margin-top: 12px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 13px;
+      color: #ff80ab;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    /* RAINBOW BYE BUTTON & AGAIN BUTTON */
+    .btn-bye {
+      font-size: 42px;
+      padding: 18px 50px;
+      border-radius: 60px;
+      border: 5px solid #ffffff;
+      color: #ffffff;
+      font-weight: 700;
+      cursor: pointer;
+      background: linear-gradient(45deg, #ff0055, #ff7700, #ffeb00, #00e5ff, #7a00ff, #ff0055);
+      background-size: 400% 400%;
+      animation: rainbowGlow 3s ease infinite, byeThrob 1.2s infinite alternate;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .btn-again {
+      font-size: 28px;
+      padding: 15px 40px;
+      border-radius: 50px;
+      border: 4px solid #ffffff;
+      color: #ffffff;
+      font-weight: 700;
+      cursor: pointer;
+      background: linear-gradient(180deg, #ff6699 0%, #ff1a66 100%);
+      box-shadow: 0px 8px 0px #cc0044, 0px 10px 20px rgba(255, 26, 102, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .btn-again:hover {
+      transform: scale(1.05) translateY(-3px);
+      box-shadow: 0px 12px 0px #cc0044, 0px 15px 25px rgba(255, 26, 102, 0.5);
+    }
+
+    @keyframes rainbowGlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes byeThrob {
+      0% { transform: scale(0.95); }
+      100% { transform: scale(1.08); }
+    }
+
+    /* QUIZ CONTAINER STYLES */
+    .quiz-container {
+      width: 100%;
+      max-height: 60vh;
+      overflow-y: auto;
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 20px;
+      padding: 15px;
+      border: 3px solid #ff80ab;
+      text-align: left;
+      margin-bottom: 20px;
+    }
+
+    .quiz-item {
+      margin-bottom: 12px;
+    }
+
+    .quiz-label {
+      font-size: 13px;
+      color: #333;
+      font-weight: 600;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .quiz-input {
+      width: 100%;
+      padding: 6px 12px;
+      border: 2px solid #ffccd5;
+      border-radius: 8px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .quiz-input:focus {
+      border-color: #ff3377;
+    }
+
+    .quiz-footer {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      gap: 10px;
+    }
+
+    .btn-quiz {
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 15px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-submit {
+      background: #cccccc;
+      color: #ffffff;
+      cursor: not-allowed;
+    }
+
+    .btn-submit.active-submit {
+      background: #ff3377;
+      color: #ffffff;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #cc0044;
+    }
+
+    .btn-dontknow {
+      background: #ff99bb;
+      color: #ffffff;
+      box-shadow: 0 4px 0 #b33962;
+    }
+
+    /* GET TO KNOW YOU QUIZ */
+    .quiz-intro-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #ff3377;
+      text-shadow: 2px 2px 0px #fff, -2px -2px 0px #fff, 2px -2px 0px #fff, -2px 2px 0px #fff, 0px 4px 0px #cc0044;
+      margin-bottom: 10px;
+    }
+
+    .quiz-question-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #ff3377;
+      text-shadow: 2px 2px 0px #fff, -2px -2px 0px #fff, 2px -2px 0px #fff, -2px 2px 0px #fff, 0px 4px 0px #cc0044;
+      margin-bottom: 20px;
+      line-height: 1.3;
+    }
+
+    .quiz-choices-vertical {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 100%;
+      align-items: center;
+      margin-bottom: 90px;
+    }
+
+    .quiz-choice-btn {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      padding: 15px 45px 15px 20px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: #ffffff;
+      border: 4px solid #ffffff;
+      border-radius: 20px;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s ease;
+      background: linear-gradient(180deg, #ff6699 0%, #ff1a66 100%);
+      box-shadow: 0px 6px 0px #cc0044, 0px 10px 20px rgba(255, 26, 102, 0.3);
+      text-align: left;
+    }
+
+    .quiz-choice-btn:hover {
+      transform: scale(1.02) translateY(-2px);
+    }
+
+    .quiz-choice-btn.selected {
+      box-shadow: 0 0 0 4px #ffeb00, 0px 6px 0px #cc0044, 0px 10px 25px rgba(255, 235, 0, 0.6);
+      transform: scale(1.03);
+    }
+
+    .quiz-choice-btn.selected::after {
+      content: '✓';
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 22px;
+      color: #ffeb00;
+      text-shadow: 0 0 4px rgba(0,0,0,0.5);
+    }
+
+    .btn-quiz-next {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      padding: 14px 34px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffffff;
+      border: 4px solid #ffffff;
+      border-radius: 50px;
+      cursor: pointer;
+      outline: none;
+      background: linear-gradient(180deg, #ff6699 0%, #ff1a66 100%);
+      box-shadow: 0px 6px 0px #cc0044, 0px 10px 20px rgba(255, 26, 102, 0.4);
+      transition: all 0.2s ease;
+      z-index: 40;
+    }
+
+    .btn-quiz-next:hover:not(:disabled) {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0px 9px 0px #cc0044, 0px 14px 22px rgba(255, 26, 102, 0.5);
+    }
+
+    .btn-quiz-next:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none !important;
+    }
+
+    .results-container {
+      width: 100%;
+      max-width: 500px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 20px;
+      border: 3px solid #ff80ab;
+      padding: 18px;
+      margin-bottom: 15px;
+      text-align: left;
+    }
+
+    .results-header-row, .results-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid #ffd1dc;
+    }
+
+    .results-header-row {
+      font-weight: 700;
+      color: #ff3377;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .results-row {
+      font-size: 12.5px;
+      color: #333333;
+      align-items: center;
+    }
+
+    .results-col-me {
+      text-align: left;
+      padding-right: 8px;
+    }
+
+    .results-col-you {
+      text-align: right;
+      padding-left: 8px;
+      border-left: 2px solid #ffd1dc;
+    }
+
+    .results-match {
+      color: #1fa855;
+      font-weight: 700;
+    }
+
+    .results-score {
+      font-size: 30px;
+      font-weight: 700;
+      color: #ff3377;
+      text-align: center;
+      margin: 16px 0 6px;
+    }
+
+    .results-message {
+      font-size: 16px;
+      color: #333333;
+      text-align: center;
+      margin-bottom: 12px;
+      font-weight: 600;
+      max-width: 480px;
+    }
+
+    .results-screenshot-line {
+      font-size: 14px;
+      color: #ff3377;
+      text-align: center;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+
+    @media (max-width: 768px) {
+      .quiz-question-title { font-size: 18px; }
+      .quiz-choice-btn { font-size: 14.5px; padding: 13px 38px 13px 16px; }
+      .btn-quiz-next { bottom: 18px; right: 18px; padding: 12px 24px; font-size: 15px; }
+      .results-row { font-size: 11px; }
+      .results-score { font-size: 24px; }
+      .results-message { font-size: 14px; }
+    }
+
+    /* MODALS & ALERTS */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .modal-card {
+      background: #ffffff;
+      border-radius: 24px;
+      padding: 30px;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+      border: 4px solid #ff3377;
+      animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes modalPop {
+      0% { transform: scale(0.7); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .ai-alert {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #ff0044;
+      color: white;
+      padding: 25px 40px;
+      border-radius: 20px;
+      font-size: 28px;
+      font-weight: 700;
+      box-shadow: 0 0 40px rgba(0,0,0,0.5);
+      z-index: 300;
+      border: 4px solid #ffffff;
+      text-align: center;
+    }
+
+    @keyframes buttonThrob {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+
+    /* GERMANY FLAG FRAMED PHOTO */
+    .germany-photo-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .flag-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      animation: flowerFloat 3s ease-in-out infinite alternate;
+    }
+
+    .flag-icon {
+      width: 32px;
+      height: auto;
+      border-radius: 3px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+    }
+
+    .germany-photo {
+      width: 320px;
+      max-width: 80vw;
+      height: 220px;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 6px solid #000000;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    /* CONFIRM PAGE - DODGING YES BUTTON */
+    .confirm-stage {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      height: 240px;
+      margin: 10px auto 0;
+    }
+
+    .confirm-yes-btn {
+      position: absolute;
+      left: 50%;
+      top: 30%;
+      transform: translate(-50%, -50%);
+      transition: left 0.25s ease, top 0.25s ease, bottom 0.25s ease, right 0.25s ease;
+      z-index: 5;
+    }
+
+    .confirm-no-btn {
+      position: absolute;
+      left: 50%;
+      bottom: 10px;
+      transform: translateX(-50%);
+      z-index: 4;
+    }
+
+    @media (max-width: 768px) {
+      .confirm-stage { height: 220px; }
+    }
+
+    /* COUNTDOWN TIMER */
+    .countdown-wrapper {
+      margin-top: 25px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 3px solid #ff80ab;
+      border-radius: 20px;
+      padding: 20px 25px;
+      box-shadow: 0 10px 25px rgba(255, 51, 119, 0.2);
+    }
+
+    .countdown-grid {
+      display: flex;
+      gap: 18px;
+      justify-content: center;
+    }
+
+    .countdown-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 70px;
+    }
+
+    .countdown-value {
+      font-size: 42px;
+      font-weight: 700;
+      color: #ff3377;
+      line-height: 1;
+    }
+
+    .countdown-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #ff80ab;
+      text-transform: uppercase;
+      margin-top: 6px;
+      letter-spacing: 1px;
+    }
+
+    @media (max-width: 768px) {
+      .title-3d { font-size: 60px; }
+      .subtitle { font-size: 22px; }
+      .question-title { font-size: 24px; }
+      .options-container { flex-direction: column; gap: 15px; }
+      .btn-option { width: 180px; font-size: 22px; }
+      .btn-vertical { font-size: 18px; padding: 14px 20px; }
+      .btn-back { top: -45px; left: 10px; padding: 6px 14px; font-size: 14px; }
+      .letter-content { font-size: 17px; }
+      .btn-bye { font-size: 32px; padding: 15px 35px; }
+      .btn-again { font-size: 22px; padding: 12px 30px; }
+      .countdown-value { font-size: 30px; }
+      .countdown-unit { min-width: 55px; }
+      .countdown-grid { gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-container">
+    
+    <div class="hearts-backdrop">
+      <div class="floating-heart">💖</div>
+      <div class="floating-heart">♥</div>
+      <div class="floating-heart">💖</div>
+      <div class="floating-heart">♥</div>
+      <div class="floating-heart">💖</div>
+      <div class="floating-heart">♥</div>
+    </div>
+    <audio id="clickSound" src="Click.mp4" preload="auto"></audio>
+    <audio id="bgMusic" src="Background.mp4" loop preload="auto"></audio>
+    <!-- PAGE 1 -->
+    <div class="page active" id="page1">
+      <div class="me-photo-wrapper">
+        <img src="Vale.jpg" alt="Vale" class="me-photo" onerror="this.onerror=null;this.src='https://placehold.co/220x220/ff80ab/ffffff?text=Vale';">
+      </div>
+      <h1 class="title-3d">
+        Anne's YES!<br>
+        <span class="subtitle">GAME!</span>
+      </h1>
+      <button class="play-button" onclick="goToPage('page1', 'page2')" aria-label="Start Game">
+        <span class="chevron-icon">&gt;</span>
+      </button>
+      <p class="click-text">♥ Click to start! ♥</p>
+    </div>
+
+    <!-- PAGE 2 -->
+    <div class="page" id="page2">
+      <button class="btn-back" id="back-btn-main" onclick="goToPage('page2', 'page1')">&#8592; Back</button>
+      <h2 class="question-title">How's my baby doing today👶💐?<span id="page2-emoji">😇</span></h2>
+      <div class="options-container">
+        <button class="btn-option btn-yes" 
+                onmouseover="setEmoji('💖')" 
+                onmouseout="resetEmoji()" 
+                onclick="goToPage('page2', 'page3b')">Im great😄</button>
+        <button class="btn-option btn-no" 
+                onmouseover="setEmoji('👀')" 
+                onmouseout="resetEmoji()" 
+                onclick="goToPage('page2', 'page3a')">Not good😫</button>
+      </div>
+    </div>
+
+    <!-- PAGE 3A (NO OPTION) -->
+    <div class="page" id="page3a">
+      <button class="btn-back" onclick="goToPage('page3a', 'page2')">&#8592; Back</button>
+      <h2 class="question-title" id="page3a-title">Oh no what's wrong 😭</h2>
+      <div class="options-vertical">
+        <button class="btn-vertical" onclick="goToPage('page3a', 'page4_miss_you')">A. I miss you💖</button>
+        <button class="btn-vertical" onclick="goToPage('page3a', 'page4_see_you')">B. I want to see you 🥲</button>
+        <button class="btn-vertical" onclick="goToPage('page3a', 'page_confirm_no_love')">C. I have a boyfriend Wesley🥀</button>
+        <button class="btn-vertical" onclick="goToPage('page3a', 'page_germany')">D. <img src="https://flagcdn.com/w40/de.png" alt="Germany flag" class="flag-icon"> </button>
+      </div>
+    </div>
+
+    <!-- PAGE: GERMANY -->
+    <div class="page" id="page_germany">
+      <button class="btn-back" onclick="stopGermanyMusicAndBack()">&#8592; Back</button>
+      <div class="germany-photo-wrapper">
+        <div class="flag-row">
+          <img src="https://flagcdn.com/w40/de.png" alt="Germany flag" class="flag-icon">
+          <img src="https://flagcdn.com/w40/de.png" alt="Germany flag" class="flag-icon">
+          <img src="https://flagcdn.com/w40/de.png" alt="Germany flag" class="flag-icon">
+          <img src="https://flagcdn.com/w40/de.png" alt="Germany flag" class="flag-icon">
+          <img src="https://flagcdn.com/w40/de.png" alt="Germany flag" class="flag-icon">
+        </div>
+        <img src="Germany.jpeg" alt="Germany" class="germany-photo" onerror="this.onerror=null;this.src='https://placehold.co/320x220/000000/ffffff?text=Germany';">
+        <div class="flag-row">
+          <img src="https://flagcdn.com/w40/de.png" alt="Germany flag" class="flag-icon">
+          <img src="https://flagcdn.com/w40/de.png" alt="Germany flag" class="flag-icon">
+          <img src="https://flagcdn.com/w40/de.png" alt="Germany flag" class="flag-icon">
+          <img src="https://flagcdn.com/w40/de.png" alt="Germany flag" class="flag-icon">
+          <img src="https://flagcdn.com/w40/de.png" alt="Germany flag" class="flag-icon">
+        </div>
+      </div>
+      <audio id="germanyAudio" src="music.mp4" loop></audio>
+    </div>
+
+    <!-- PAGE: CONFIRM SHE REALLY MEANS IT -->
+    <div class="page" id="page_confirm_no_love">
+      <button class="btn-back" onclick="goToPage('page_confirm_no_love', 'page3a')">&#8592; Back</button>
+      <h2 class="question-title">Do you really mean that 🥲?</h2>
+      <div class="confirm-stage" id="confirmStage">
+        <button class="btn-option btn-yes confirm-yes-btn" id="confirmYesBtn"
+                onmouseover="handleYesHover()"
+                onclick="handleYesClick(event)">Yes</button>
+        <button class="btn-option btn-no confirm-no-btn" id="confirmNoBtn"
+                onclick="goToPage('page_confirm_no_love', 'page3a')">No</button>
+      </div>
+      <p class="click-text" id="dodgeHint">try to catch the YES button 😏</p>
+    </div>
+
+    <!-- PAGE 3B (YES SURPRISE ENVELOPE) -->
+    <div class="page" id="page3b">
+      <button class="btn-back" id="btn-back-3b" onclick="goToPage('page3b', 'page2')">&#8592; Back</button>
+      <h2 class="question-title">I was hoping you were fine . I have a surprise for you🥹.</h2>
+      
+      <div class="surprise-wrapper">
+        <div class="envelope-container" id="envelopeContainer" onclick="openEnvelope()">
+          <div class="envelope-flap" id="envelopeFlap"></div>
+          
+          <div class="ribbon-wrapper" id="ribbonWrapper">
+            <div class="ribbon-vertical"></div>
+            <div class="ribbon-horizontal"></div>
+            <div class="ribbon-bow">🎀</div>
+          </div>
+          
+          <div class="envelope-pocket"></div>
+          <div class="envelope-pocket-front"></div>
+        </div>
+
+        <p class="reveal-instruction" id="revealText" onclick="openEnvelope()">press to reveal surprise</p>
+
+        <div class="letter-paper folded-inside" id="letterPaper" onclick="closeLetterAndVanish()">
+          <div class="letter-content">
+Anne,
+Somehow you managed to become one of the most important people in my life without even asking permission—and honestly, I wouldn't have it any other way. ❤️
+You make my days brighter, my smile bigger, and my heart happier. Every conversation with you, every laugh we share, and every little moment together means more to me than you probably realize.
+I'm genuinely grateful to have you in my life. You've become someone I think about often, someone who makes ordinary days feel special. I cherish all our memories, the random chats, and even the silly moments that make us who we are.
+I promise to keep making you laugh, supporting you, caring about you, and reminding you just how much you mean to me. ❤️
+          </div>
+          <div class="letter-signature">
+            Yours always,❤️,<br>
+          </div>
+          <span class="close-hint">♥ Touch letter to put back ♥</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: DID YOU LIKE SURPRISE -->
+    <div class="page" id="page_like_surprise">
+      <h2 class="question-title">Did you like the surprise🥹my love ?</h2>
+      <div class="options-container">
+        <button class="btn-option btn-yes" onclick="goToPage('page_like_surprise', 'page_of_course')">YES</button>
+        <button class="btn-option btn-no" onclick="goToPage('page_like_surprise', 'page_too_bad')">NO</button>
+      </div>
+    </div>
+
+    <!-- PAGE: OF COURSE YOU LOVED IT -->
+    <div class="page" id="page_of_course">
+      <h2 class="question-title">Of course you loved it 😌 I thought of it. And what do you think of all these, thoughtful of me right😏?</h2>
+      <div class="options-container">
+        <button class="btn-option btn-yes" onclick="goToPage('page_of_course', 'quiz_q1')">YES</button>
+        <button class="btn-option btn-no" onclick="goToPage('page_of_course', 'page_too_bad')">NO</button>
+      </div>
+    </div>
+
+    <!-- PAGE: PRESS NO IN EVERY QUESTION -->
+    <div class="page" id="page_press_no">
+      <h2 class="question-title" style="font-size: 26px;">I know right 🥹. And make sure you go back and press the other options too just for fun. Took alot of time but it was worth it for you😘</h2>
+      
+      <div class="options-container" style="margin-top: 15px; flex-wrap: wrap; gap: 20px;">
+        <button class="btn-bye" onclick="triggerFireworks()">Press💖🤞</button>
+        <button class="btn-again" onclick="restartGame()">Again👶!!</button>
+      </div>
+    </div>
+
+    <!-- PAGE: TOO BAD ON YOUR END -->
+    <div class="page" id="page_too_bad">
+      <h2 class="question-title">Too bad🥀. I actually thought you'd like it🤞. Was it creative tho?🔥</h2>
+      <div class="options-container">
+        <button class="btn-option btn-yes" onclick="goToPage('page_too_bad', 'page_press_no')">YES</button>
+        <button class="btn-option btn-no" onclick="goToPage('page_too_bad', 'quiz_q1')">NO</button>
+      </div>
+    </div>
+
+    <!-- PAGE: GET TO KNOW YOU QUIZ - QUESTION 1 -->
+    <div class="page" id="quiz_q1">
+      <h2 class="quiz-intro-title">okay then tell me about yourself 😏💖</h2>
+      <h3 class="quiz-question-title">1. If you could wake up tomorrow and be anywhere in the world, where would you choose? 🌍✈️</h3>
+      <div class="quiz-choices-vertical">
+        <button class="quiz-choice-btn" onclick="selectQuizOption(this, 1, 'A')">A) 🏝️ A tropical island</button>
+        <button class="quiz-choice-btn" onclick="selectQuizOption(this, 1, 'B')">B) 🗼 Paris</button>
+        <button class="quiz-choice-btn" onclick="selectQuizOption(this, 1, 'C')">C) 🏔️ A snowy mountain cabin</button>
+        <button class="quiz-choice-btn" onclick="selectQuizOption(this, 1, 'D')">D) 🌃 Tokyo</button>
+      </div>
+      <button class="btn-quiz-next" id="quizNextBtn1" onclick="goToPage('quiz_q1', 'quiz_q2')" disabled>Next &#8594;</button>
+    </div>
+
+    <!-- PAGE: GET TO KNOW YOU QUIZ - QUESTION 2 -->
+    <div class="page" id="quiz_q2">
+      <h3 class="quiz-question-title">2. Which one would you survive the longest without?</h3>
+      <div class="quiz-choices-vertical">
+        <button class="quiz-choice-btn" onclick="selectQuizOption(this, 2, 'A')">A) Your phone 📱</button>
+        <button class="quiz-choice-btn" onclick="selectQuizOption(this, 2, 'B')">B) Music 🎧</button>
+        <button class="quiz-choice-btn" onclick="selectQuizOption(this, 2, 'C')">C) Food 🍔</button>
+        <button class="quiz-choice-btn" onclick="selectQuizOption(this, 2, 'D')">D) Me 🥺</button>
+      </div>
+      <button class="btn-quiz-next" id="quizNextBtn2" onclick="goToPage('quiz_q2', 'quiz_q3')" disabled>Next &#8594;</button>
+    </div>
+
+    <!-- PAGE: GET TO KNOW YOU QUIZ - QUESTION 3 -->
+    <div class="page" id="quiz_q3">
+      <h3 class="quiz-question-title">3. If a zombie apocalypse started tomorrow, what would you do first? 🧟‍♀️</h3>
+      <div class="quiz-choices-vertical">
+        <button class="quiz-choice-btn" onclick="selectQuizOption(this, 3, 'A')">A) Find food 🍕</button>
+        <button class="quiz-choice-btn" onclick="selectQuizOption(this, 3, 'B')">B) Find weapons 🔪</button>
+        <button class="quiz-choice-btn" onclick="selectQuizOption(this, 3, 'C')">C) Call me</button>
+        <button class="quiz-choice-btn" onclick="selectQuizOption(this, 3, 'D')">D) Accept my fate and become a zombie 😭</button>
+      </div>
+      <button class="btn-quiz-next" id="quizNextBtn3" onclick="goToPage('quiz_q3', 'quiz_q4')" disabled>Next &#8594;</button>
+    </div>
+
+    <!-- PAGE: GET TO KNOW YOU QUIZ - QUESTION 4 -->
+    <div class="page" id="quiz_q4">
+      <h3 class="quiz-question-title">4. What's your biggest red flag? 🚩</h3>
+      <div class="quiz-choices-vertical">
+        <button class="quiz-choice-btn" onclick="selectQuizOption(this, 4, 'A')">A) I overthink everything</button>
+        <button class="quiz-choice-btn" onclick="selectQuizOption(this, 4, 'B')">B) I get hungry and become a different person</button>
+        <button class="quiz-choice-btn" onclick="selectQuizOption(this, 4, 'C')">C) I say "I'm fine" when I'm absolutely NOT fine</button>
+        <button class="quiz-choice-btn" onclick="selectQuizOption(this, 4, 'D')">D) I have no red flags (the biggest red flag)</button>
+      </div>
+      <button class="btn-quiz-next" id="quizNextBtn4" onclick="goToPage('quiz_q4', 'quiz_q5')" disabled>Next &#8594;</button>
+    </div>
+
+    <!-- PAGE: GET TO KNOW YOU QUIZ - QUESTION 5 -->
+    <div class="page" id="quiz_q5">
+      <h3 class="quiz-question-title">5. If you were stranded on an island with one person for 6 months, who would you rather be left with? 👀</h3>
+      <div class="quiz-choices-vertical">
+        <button class="quiz-choice-btn" onclick="selectQuizOption(this, 5, 'A')">A) Me</button>
+        <button class="quiz-choice-btn" onclick="selectQuizOption(this, 5, 'B')">B) Your ex / last man / your crush (if it's not me 👀)</button>
+        <button class="quiz-choice-btn" onclick="selectQuizOption(this, 5, 'C')">C) Me</button>
+        <button class="quiz-choice-btn" onclick="selectQuizOption(this, 5, 'D')">D) Me</button>
+      </div>
+      <button class="btn-quiz-next" id="quizNextBtn5" onclick="finishQuiz()" disabled>Done ✓</button>
+    </div>
+
+    <!-- PAGE: QUIZ RESULTS COMPARISON -->
+    <div class="page" id="quiz_results">
+      <h2 class="question-title" style="font-size: 24px;">Let's see how we matched up 👀</h2>
+      <div class="results-container">
+        <div class="results-header-row">
+          <div>Me 💖</div>
+          <div>You 💕</div>
+        </div>
+        <div id="resultsRows"></div>
+      </div>
+      <div class="results-score" id="resultsScore">0 / 50</div>
+      <p class="results-message" id="resultsMessage"></p>
+      <p class="results-screenshot-line">Oh, and be a darling and take a screenshot of this and send it to me, would you? 😎</p>
+      <button class="btn-quiz-next" onclick="goToPage('quiz_results', 'page_press_no')">Okay</button>
+    </div>
+
+    <!-- OTHER PAGES -->
+    <div class="page" id="page4_miss_you">
+      <button class="btn-back" onclick="goToPage('page4_miss_you', 'page3a')">&#8592; Back</button>
+      <h2 class="question-title">Awww babe 🥲 i miss you more</h2>
+      <div class="options-vertical">
+        <button class="btn-vertical" onclick="goToPage('page4_miss_you', 'page_call_wesley')">A. Call Wesley🫠</button>
+        <button class="btn-vertical" onclick="goToPage('page4_miss_you', 'page_wait_call')">B. Wait to be called by Wesley 🤣</button>
+        <button class="btn-vertical" onclick="goToPage('page4_miss_you', 'page_monkey')">C. Call Kirsten 🤡</button>
+      </div>
+    </div>
+
+    <div class="page" id="page4_see_you">
+      <button class="btn-back" onclick="goToPage('page4_see_you', 'page3a')">&#8592; Back</button>
+      <h2 class="question-title">Here I am! 💖</h2>
+      <div class="me-photo-wrapper">
+        <img src="me.jpg" alt="Wesley" class="me-photo" onerror="this.onerror=null;this.src='https://placehold.co/220x220/ff80ab/ffffff?text=Me';">
+      </div>
+    </div>
+
+    <div class="page" id="page_call_wesley">
+      <button class="btn-back" onclick="goToPage('page_call_wesley', 'page4_miss_you')">&#8592; Back</button>
+      <div class="whatsapp-card" style="background: white; padding: 25px; border-radius: 20px; border: 4px solid #25D366;">
+        <h2 class="question-title" style="margin-bottom: 10px;">Wesley is waiting! 📱</h2>
+        <a href="https://wa.me/254111994529" target="_blank" style="display: inline-block; background: #25D366; color: white; padding: 12px 25px; border-radius: 40px; text-decoration: none; font-weight: 700;">WhatsApp Wesley</a>
+      </div>
+    </div>
+
+    <div class="page" id="page_wait_call">
+      <button class="btn-back" onclick="goToPage('page_wait_call', 'page4_miss_you')">&#8592; Back</button>
+      <h2 class="question-title">I guess we're waiting then 😐</h2>
+      <div class="countdown-wrapper">
+        <div class="countdown-grid">
+          <div class="countdown-unit">
+            <span class="countdown-value" id="cd-days">1000</span>
+            <span class="countdown-label">Days</span>
+          </div>
+          <div class="countdown-unit">
+            <span class="countdown-value" id="cd-hours">00</span>
+            <span class="countdown-label">Hours</span>
+          </div>
+          <div class="countdown-unit">
+            <span class="countdown-value" id="cd-mins">00</span>
+            <span class="countdown-label">Min</span>
+          </div>
+          <div class="countdown-unit">
+            <span class="countdown-value" id="cd-secs">00</span>
+            <span class="countdown-label">Sec</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page_monkey">
+      <button class="btn-back" onclick="stopMonkeySoundAndBack()">&#8592; Back</button>
+      <div class="me-photo-wrapper">
+        <img src="Monkey.jpeg" alt="monkey" class="me-photo" onerror="this.onerror=null;this.src='https://placehold.co/220x220/ff80ab/ffffff?text=monkey';">
+      </div>
+      <div class="whatsapp-card" style="background: white; padding: 25px; border-radius: 20px; border: 4px solid #25D366; margin-top: 20px;">
+        <a href="https://wa.me/254111994529" target="_blank" style="display: inline-block; background: #25D366; color: white; padding: 12px 25px; border-radius: 40px; text-decoration: none; font-weight: 700;">WhatsApp Wesley</a>
+      </div>
+      <audio id="monkeyAudio" src="ruined.mp4"></audio>
+    </div>
+
+  </div>
+
+  <!-- OKAY THEN TOAST -->
+  <div class="ai-alert" id="okayThenAlert" style="background: #ff6699;">
+    okay then😪
+  </div>
+
+  <script>
+    let envelopeOpened = false;
+    let countdownInterval = null;
+    function resumeBgMusic() {
+  const bg = document.getElementById('bgMusic');
+  if (bg && bg.paused) {
+    bg.play().catch(() => {});
+  }
+}
+    function duckBgMusicFor(soundEl) {
+  const bg = document.getElementById('bgMusic');
+  if (!bg) return;
+
+  if (!bg.paused) bg.pause();
+
+  soundEl.addEventListener('ended', function resume() {
+    bg.play().catch(() => {});
+    soundEl.removeEventListener('ended', resume);
+  });
+}
+    // put this in your <script> section
+let bgMusicStarted = false;
+
+function startBgMusicOnce() {
+  if (bgMusicStarted) return;
+  const bg = document.getElementById('bgMusic');
+  if (bg) {
+    bg.volume = 0.5; // adjust as you like, 0 to 1
+    bg.play().catch(() => {});
+  }
+  bgMusicStarted = true;
+  document.removeEventListener('click', startBgMusicOnce);
+}
+
+document.addEventListener('click', startBgMusicOnce);
+
+  document.addEventListener('click', function (e) {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+
+  const sound = document.getElementById('clickSound');
+  if (sound) {
+    sound.currentTime = 0;
+    sound.play().catch(() => {});
+  }
+}, true);
+    function goToPage(fromPageId, toPageId) {
+      document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+      document.getElementById(toPageId).classList.add('active');
+
+      if (toPageId === 'page_wait_call') {
+        startCountdown();
+      } else if (fromPageId === 'page_wait_call' && countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+      }
+
+      if (toPageId === 'page_confirm_no_love') {
+        setupConfirmPage();
+      }
+
+      if (toPageId === 'page_germany') {
+        const audio = document.getElementById('germanyAudio');
+        if (audio) {
+          audio.currentTime = 0;
+          audio.volume = 0;
+          duckBgMusicFor(audio); 
+          audio.play().catch(() => {});
+          startGermanyVolumeRamp();
+        }
+      }
+
+      if (toPageId === 'page_monkey') {
+        const monkeyAudio = document.getElementById('monkeyAudio');
+        if (monkeyAudio) {
+          monkeyAudio.currentTime = 0;
+          duckBgMusicFor(monkeyAudio);
+          monkeyAudio.play().catch(() => {});
+        }
+      }
+
+      if (toPageId === 'quiz_results') {
+        renderQuizResults();
+      }
+    }
+
+    function stopMonkeySoundAndBack() {
+      const monkeyAudio = document.getElementById('monkeyAudio');
+      if (monkeyAudio) {
+        monkeyAudio.pause();
+        monkeyAudio.currentTime = 0;
+      }
+      resumeBgMusic();
+      goToPage('page_monkey', 'page4_miss_you');
+    }
+
+    function stopGermanyMusicAndBack() {
+      const audio = document.getElementById('germanyAudio');
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+      if (germanyVolumeInterval) {
+        clearInterval(germanyVolumeInterval);
+        germanyVolumeInterval = null;
+      }
+      resumeBgMusic();
+      goToPage('page_germany', 'page3a');
+    }
+
+    /* Ramp the Germany-page music volume up by 0.3 per second until it hits full volume */
+    let germanyVolumeInterval = null;
+    function startGermanyVolumeRamp() {
+      if (germanyVolumeInterval) clearInterval(germanyVolumeInterval);
+      germanyVolumeInterval = setInterval(() => {
+        const audio = document.getElementById('germanyAudio');
+        if (!audio) return;
+        const next = Math.min(1, audio.volume + 0.3);
+        audio.volume = Math.round(next * 100) / 100;
+        if (audio.volume >= 1) {
+          clearInterval(germanyVolumeInterval);
+          germanyVolumeInterval = null;
+        }
+      }, 1000);
+    }
+
+    function setEmoji(emojiChar) {
+      document.getElementById('page2-emoji').textContent = emojiChar;
+    }
+
+    function resetEmoji() {
+      document.getElementById('page2-emoji').textContent = '😇';
+    }
+
+    /* COUNTDOWN TIMER: counts down from 1000 days from the moment this page is first opened */
+    function startCountdown() {
+      if (countdownInterval) clearInterval(countdownInterval);
+
+      const totalMs = 1000 * 24 * 60 * 60 * 1000; // 1000 days
+      const endTime = Date.now() + totalMs;
+
+      function render() {
+        const remaining = Math.max(0, endTime - Date.now());
+
+        const days = Math.floor(remaining / (24 * 60 * 60 * 1000));
+        const hours = Math.floor((remaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+        const mins = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+        const secs = Math.floor((remaining % (60 * 1000)) / 1000);
+
+        document.getElementById('cd-days').textContent = days;
+        document.getElementById('cd-hours').textContent = String(hours).padStart(2, '0');
+        document.getElementById('cd-mins').textContent = String(mins).padStart(2, '0');
+        document.getElementById('cd-secs').textContent = String(secs).padStart(2, '0');
+
+        if (remaining <= 0) {
+          clearInterval(countdownInterval);
+          countdownInterval = null;
+        }
+      }
+
+      render();
+      countdownInterval = setInterval(render, 1000);
+    }
+
+    /* CONFIRM PAGE - YES BUTTON DODGES FOR THE FIRST 5 ATTEMPTS, THEN WORKS NORMALLY */
+    const MAX_DODGES = 10;
+    let yesDodgeCount = 0;
+
+    function setupConfirmPage() {
+      yesDodgeCount = 0;
+      const btn = document.getElementById('confirmYesBtn');
+      const hint = document.getElementById('dodgeHint');
+      btn.style.position = 'absolute';
+      btn.style.left = '50%';
+      btn.style.top = '30%';
+      btn.style.right = 'auto';
+      btn.style.bottom = 'auto';
+      btn.style.transform = 'translate(-50%, -50%)';
+      hint.textContent = 'try to catch the YES button 😏';
+    }
+
+    // Corner order: top-left, bottom-right, top-right, bottom-left, top-center — then repeats
+    const CORNER_POSITIONS = [
+      { top: '20px', left: '20px' },
+      { bottom: '20px', right: '20px' },
+      { top: '20px', right: '20px' },
+      { bottom: '20px', left: '20px' },
+      { top: '20px', left: '50%', center: true }
+    ];
+
+    function positionYesAtCorner(attemptNumber) {
+      const btn = document.getElementById('confirmYesBtn');
+      const pos = CORNER_POSITIONS[(attemptNumber - 1) % CORNER_POSITIONS.length];
+
+      btn.style.position = 'fixed';
+      btn.style.top = pos.top || 'auto';
+      btn.style.bottom = pos.bottom || 'auto';
+      btn.style.left = pos.left || 'auto';
+      btn.style.right = pos.right || 'auto';
+      btn.style.transform = pos.center ? 'translateX(-50%)' : 'none';
+    }
+
+    function handleYesHover() {
+      if (yesDodgeCount < MAX_DODGES) {
+        yesDodgeCount++;
+        positionYesAtCorner(yesDodgeCount);
+        updateDodgeHint();
+      }
+    }
+
+    function handleYesClick(evt) {
+      if (yesDodgeCount < MAX_DODGES) {
+        yesDodgeCount++;
+        positionYesAtCorner(yesDodgeCount);
+        updateDodgeHint();
+        return;
+      }
+      showOkayThenToast();
+    }
+
+    function updateDodgeHint() {
+      const hint = document.getElementById('dodgeHint');
+      if (yesDodgeCount >= MAX_DODGES) {
+        hint.textContent = 'okay okay, go ahead and click it 😌';
+      } else {
+        hint.textContent = `nice try 😏 (${yesDodgeCount}/${MAX_DODGES})`;
+      }
+    }
+
+    function showOkayThenToast() {
+      const toast = document.getElementById('okayThenAlert');
+      toast.style.display = 'block';
+      setTimeout(() => {
+        toast.style.display = 'none';
+        goToPage('page_confirm_no_love', 'page3a');
+      }, 2000);
+    }
+
+    /* ENVELOPE SURPRISE & SWITCH LOGIC */
+    function openEnvelope() {
+      if (envelopeOpened) return;
+      envelopeOpened = true;
+
+      document.getElementById('ribbonWrapper').classList.add('ribbon-fly-off');
+      document.getElementById('revealText').style.display = 'none';
+
+      setTimeout(() => {
+        document.getElementById('envelopeFlap').classList.add('envelope-flap-open');
+      }, 400);
+
+      setTimeout(() => {
+        const letter = document.getElementById('letterPaper');
+        letter.classList.remove('folded-inside');
+        letter.classList.add('unfold-zoom');
+      }, 800);
+    }
+
+    function closeLetterAndVanish() {
+      const flap = document.getElementById('envelopeFlap');
+      const letter = document.getElementById('letterPaper');
+      const envContainer = document.getElementById('envelopeContainer');
+
+      letter.classList.remove('unfold-zoom');
+      letter.classList.add('folded-inside');
+
+      setTimeout(() => flap.classList.remove('envelope-flap-open'), 600);
+      setTimeout(() => envContainer.classList.add('vanish'), 1000);
+
+      // Disable back button and transition after 3 seconds
+      setTimeout(() => {
+        document.querySelectorAll('.btn-back').forEach(btn => btn.disabled = true);
+        goToPage('page3b', 'page_like_surprise');
+      }, 3000);
+    }
+
+    /* RESTART GAME FUNCTION */
+    function restartGame() {
+      // Re-enable back buttons
+      document.querySelectorAll('.btn-back').forEach(btn => btn.disabled = false);
+
+      // Reset envelope state
+      envelopeOpened = false;
+      document.getElementById('ribbonWrapper').classList.remove('ribbon-fly-off');
+      document.getElementById('revealText').style.display = 'block';
+      document.getElementById('envelopeFlap').classList.remove('envelope-flap-open');
+      document.getElementById('envelopeContainer').classList.remove('vanish');
+      
+      const letter = document.getElementById('letterPaper');
+      letter.classList.remove('unfold-zoom');
+      letter.classList.add('folded-inside');
+
+      // Reset the get-to-know-you quiz
+      resetQuizState();
+
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+      }
+
+      // Navigate back to landing page
+      goToPage('page_press_no', 'page1');
+    }
+
+    /* EMAILJS CONFIG — fill these in with your own EmailJS account values */
+    const EMAILJS_PUBLIC_KEY = 'oRcVmqkmsHMQwtNSs';
+    const EMAILJS_SERVICE_ID = 'service_cflh44p';
+    const EMAILJS_TEMPLATE_ID = 'template_auu991y';
+
+    if (typeof emailjs !== 'undefined') {
+      emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+    }
+
+    let resultsEmailSent = false;
+
+    function sendResultsEmail(percent, message) {
+      if (resultsEmailSent) return; // don't double-send
+      if (typeof emailjs === 'undefined') return;
+
+      const lines = [];
+      for (let i = 1; i <= 5; i++) {
+        const mine = quizQuestions[i][wesQuizAnswers[i]];
+        const hers = userQuizAnswers[i] ? quizQuestions[i][userQuizAnswers[i]] : 'no answer';
+        lines.push('Q' + i + ' — Me: ' + mine + ' | Her: ' + hers);
+      }
+
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        score: percent + ' / 50',
+        message: message,
+        answers: lines.join('\n')
+      }).then(() => {
+        resultsEmailSent = true;
+      }).catch(err => {
+        console.error('EmailJS error:', err);
+      });
+    }
+
+    /* GET TO KNOW YOU QUIZ */
+    const quizQuestions = {
+      1: {
+        A: '🏝️ A tropical island',
+        B: '🗼 Paris',
+        C: '🏔️ A snowy mountain cabin',
+        D: '🌃 Tokyo'
+      },
+      2: {
+        A: 'Your phone 📱',
+        B: 'Music 🎧',
+        C: 'Food 🍔',
+        D: 'Me 🥺'
+      },
+      3: {
+        A: 'Find food 🍕',
+        B: 'Find weapons 🔪',
+        C: 'Call me',
+        D: 'Accept my fate and become a zombie 😭'
+      },
+      4: {
+        A: 'I overthink everything',
+        B: 'I get hungry and become a different person',
+        C: 'I say "I\'m fine" when I\'m not',
+        D: 'I have no red flags'
+      },
+      5: {
+        A: 'Me',
+        B: 'Your ex / last man / your crush',
+        C: 'Me',
+        D: 'Me'
+      }
+    };
+
+    // Wesley's own answers, used to score hers against
+    const wesQuizAnswers = { 1: 'B', 2: 'D', 3: 'D', 4: 'D', 5: 'D' };
+
+    let userQuizAnswers = { 1: null, 2: null, 3: null, 4: null, 5: null };
+
+    function selectQuizOption(btn, questionNum, choice) {
+      const group = btn.parentElement;
+      group.querySelectorAll('.quiz-choice-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      userQuizAnswers[questionNum] = choice;
+
+      const nextBtn = document.getElementById('quizNextBtn' + questionNum);
+      if (nextBtn) nextBtn.disabled = false;
+    }
+
+    function finishQuiz() {
+      goToPage('quiz_q5', 'quiz_results');
+    }
+
+    function renderQuizResults() {
+      const rowsContainer = document.getElementById('resultsRows');
+      if (!rowsContainer) return;
+      rowsContainer.innerHTML = '';
+
+      let score = 0;
+      for (let i = 1; i <= 5; i++) {
+        const wesChoice = wesQuizAnswers[i];
+        const yourChoice = userQuizAnswers[i];
+        const isMatch = yourChoice === wesChoice;
+        if (isMatch) score++;
+
+        const row = document.createElement('div');
+        row.className = 'results-row';
+        row.innerHTML =
+          '<div class="results-col-me' + (isMatch ? ' results-match' : '') + '">' + quizQuestions[i][wesChoice] + '</div>' +
+          '<div class="results-col-you' + (isMatch ? ' results-match' : '') + '">' + (yourChoice ? quizQuestions[i][yourChoice] : '—') + '</div>';
+        rowsContainer.appendChild(row);
+      }
+
+      const percent = score * 10;
+      document.getElementById('resultsScore').textContent = percent + ' / 50';
+
+      const scoreMessages = {
+        0: "Oh damn, I guess I need to spend time with you to know you better 😭🥲",
+        1: "I'm proud of that 10% by the way 😭",
+        2: "I used to get scores like that in maths — I'm not threatened 😏🤞",
+        3: "A win is a win, ngl — 3/5 is a win 🤗",
+        4: "What do you mean? I only failed one question 😭😭 Which one?",
+        5: "50/50 😎 I am him, I am the GOAT — I guess I know you better than you thought."
+      };
+      document.getElementById('resultsMessage').textContent = scoreMessages[score];
+
+      sendResultsEmail(percent, scoreMessages[score]);
+    }
+
+    function resetQuizState() {
+      userQuizAnswers = { 1: null, 2: null, 3: null, 4: null, 5: null };
+      resultsEmailSent = false;
+      document.querySelectorAll('.quiz-choice-btn').forEach(b => b.classList.remove('selected'));
+      document.querySelectorAll('.btn-quiz-next').forEach(b => { if (b.id) b.disabled = true; });
+    }
+
+    /* FIREWORKS SHOW */
+    function triggerFireworks() {
+      const duration = 5 * 1000;
+      const animationEnd = Date.now() + duration;
+
+      const interval = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+        confetti({
+          particleCount,
+          startVelocity: 30,
+          spread: 360,
+          origin: { x: Math.random(), y: Math.random() - 0.2 }
+        });
+      }, 250);
+    }
+
+  </script>
+
+</body>
+</html>
